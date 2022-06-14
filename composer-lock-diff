@@ -37,7 +37,35 @@ $table_titles = array(
     'changes' => 'Production Changes',
     'changes-dev' => 'Dev Changes',
 );
+if($opts['command']) {
+    $require = 'compose update ';
+    $remove = 'composer remove ';
+    foreach ($changes['changes'] as $package => $change) {
+        if($change[1] === 'REMOVED') {
+            $remove .= "$package ";
+            continue;
+        }
+        $require .= "$package:\"$change[1]\" ";
+    }
 
+    $requireDev = 'compose update --dev ';
+    $removeDev = 'composer remove --dev';
+
+    foreach ($changes['changes-dev'] as $package => $change) {
+        if($change[1] === 'REMOVED') {
+            $removeDev .= "$package ";
+            continue;
+        }
+        $requireDev .= "$package:\"$change[1]\" ";
+    }
+
+    print $require . PHP_EOL . PHP_EOL;
+    print $requireDev . PHP_EOL . PHP_EOL;
+    print $remove . PHP_EOL . PHP_EOL;
+    print $removeDev . PHP_EOL . PHP_EOL;
+
+    return;
+}
 foreach($changes as $k => $diff) {
     print tableize($table_titles[$k], $diff, $table_opts);
 }
@@ -429,7 +457,7 @@ function ensureTrailingPathSep($path) {
 }
 
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'vcs:'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:','command', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'vcs:'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -452,6 +480,7 @@ function parseOpts() {
         'path' => array_key_exists('path', $given) ? ensureTrailingPathSep($given['path']) : '',
         'from' => array_key_exists('from', $given) ? $given['from'] : '',
         'to' => array_key_exists('to', $given) ? $given['to'] : '',
+        'command' => array_key_exists('command',$given),
         'md' => array_key_exists('md', $given),
         'json' => array_key_exists('json', $given),
         'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
